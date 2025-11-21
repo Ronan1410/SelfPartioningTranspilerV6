@@ -1,4 +1,7 @@
 import os
+import tokenize
+import ast
+import io
 
 class HtmlVisualizer:
     def __init__(self, output_dir="viz"):
@@ -8,7 +11,7 @@ class HtmlVisualizer:
 
     def generate_report(self, results):
         """
-        Generates a self-contained HTML report with a Mermaid diagram and code blocks.
+        Generates a self-contained HTML report with Mermaid diagram, code blocks, and AST/Lexer visuals.
         """
         html_path = os.path.join(self.output_dir, "polyglot_report.html")
         
@@ -30,6 +33,10 @@ class HtmlVisualizer:
             code_block = res['transpiled'].replace("<", "&lt;").replace(">", "&gt;")
             lang_class = self._get_lang_class(lang)
             
+            # Generate Lexer/Parser visuals
+            lexer_viz = self._visualize_lexer(res['original'])
+            parser_viz = self._visualize_parser(res['original'])
+            
             cards += f"""
             <div class="card">
                 <div class="card-header" style="background-color: {color}">
@@ -40,7 +47,26 @@ class HtmlVisualizer:
                     <div class="meta">
                         <strong>Reasoning:</strong> {res['source']}
                     </div>
-                    <pre><code class="language-{lang_class}">{code_block}</code></pre>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="openTab(event, 'code{i}')">Transpiled Code</button>
+                        <button class="tab-btn" onclick="openTab(event, 'lexer{i}')">Lexer (Tokens)</button>
+                        <button class="tab-btn" onclick="openTab(event, 'parser{i}')">Parser (AST)</button>
+                    </div>
+
+                    <div id="code{i}" class="tab-content" style="display:block">
+                        <pre><code class="language-{lang_class}">{code_block}</code></pre>
+                    </div>
+                    
+                    <div id="lexer{i}" class="tab-content">
+                        <div class="token-stream">
+                            {lexer_viz}
+                        </div>
+                    </div>
+                    
+                    <div id="parser{i}" class="tab-content">
+                        <pre><code class="language-python">{parser_viz}</code></pre>
+                    </div>
                 </div>
             </div>
             """
@@ -56,6 +82,28 @@ class HtmlVisualizer:
     <script>
         mermaid.initialize({{startOnLoad:true}});
         hljs.highlightAll();
+        
+        function openTab(evt, tabName) {{
+            var i, tabcontent, tablinks;
+            // Find the parent card of the clicked button
+            var card = evt.currentTarget.closest('.card');
+            
+            // Hide all tab content in this card
+            tabcontent = card.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {{
+                tabcontent[i].style.display = "none";
+            }}
+            
+            // Remove active class from all buttons in this card
+            tablinks = card.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {{
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }}
+            
+            // Show the specific tab content and active button
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }}
     </script>
     <style>
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 40px; color: #333; }}
@@ -68,16 +116,29 @@ class HtmlVisualizer:
             border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
             width: 45%; 
-            min-width: 400px; 
+            min-width: 500px; 
             overflow: hidden;
             transition: transform 0.2s;
         }}
-        .card:hover {{ transform: translateY(-5px); }}
         .card-header {{ padding: 15px 20px; color: white; font-weight: bold; font-size: 1.1em; display: flex; justify-content: space-between; }}
         .card-body {{ padding: 20px; }}
         .meta {{ font-size: 0.9em; color: #666; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px; }}
         pre {{ margin: 0; padding: 0; }}
-        code {{ border-radius: 6px; font-size: 0.9em; }}
+        code {{ border-radius: 6px; font-size: 0.9em; max-height: 400px; overflow-y: auto; }}
+        
+        /* Tabs */
+        .tabs {{ overflow: hidden; border-bottom: 1px solid #ccc; margin-bottom: 10px; }}
+        .tab-btn {{ background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 10px 16px; transition: 0.3s; font-weight: 600; color: #555; }}
+        .tab-btn:hover {{ background-color: #ddd; }}
+        .tab-btn.active {{ border-bottom: 2px solid #333; color: #333; }}
+        .tab-content {{ display: none; animation: fadeEffect 0.5s; }}
+        @keyframes fadeEffect {{ from {{opacity: 0;}} to {{opacity: 1;}} }}
+        
+        /* Token Stream */
+        .token-stream {{ display: flex; flex-wrap: wrap; gap: 5px; font-family: monospace; font-size: 0.8em; }}
+        .token {{ padding: 2px 6px; border-radius: 4px; background: #eee; border: 1px solid #ddd; }}
+        .token-type {{ color: #888; font-size: 0.7em; display: block; }}
+        .token-val {{ font-weight: bold; color: #333; }}
     </style>
 </head>
 <body>
@@ -100,6 +161,29 @@ class HtmlVisualizer:
             f.write(html_content)
             
         return html_path
+
+    def _visualize_lexer(self, code):
+        tokens_html = ""
+        try:
+            tokens = list(tokenize.tokenize(io.BytesIO(code.encode('utf-8')).readline))
+            for tok in tokens:
+                if tok.type == tokenize.ENCODING or tok.type == tokenize.ENDMARKER or tok.type == tokenize.NL:
+                    continue
+                tok_name = tokenize.tok_name[tok.type]
+                tok_val = tok.string.replace("<", "&lt;").replace(">", "&gt;")
+                if tok.type == tokenize.NEWLINE: tok_val = "\\n"
+                
+                tokens_html += f'<div class="token"><span class="token-type">{tok_name}</span><span class="token-val">{tok_val}</span></div>'
+        except Exception as e:
+            tokens_html = f"Error tokenizing: {e}"
+        return tokens_html
+
+    def _visualize_parser(self, code):
+        try:
+            tree = ast.parse(code)
+            return ast.dump(tree, indent=4)
+        except Exception as e:
+            return f"Error parsing: {e}"
 
     def _get_color(self, lang):
         return {
