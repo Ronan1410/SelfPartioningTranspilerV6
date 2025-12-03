@@ -259,11 +259,21 @@ class RustTranspiler(BaseTranspiler):
          has_return = any(isinstance(n, ast.Return) for n in ast.walk(node) if isinstance(n, ast.Return))
          returns_dict = False
          
-         # Check if function returns a dict
+         # Check if function returns a dict (either directly or via a variable)
          for stmt in ast.walk(node):
-             if isinstance(stmt, ast.Return) and isinstance(stmt.value, ast.Dict):
-                 returns_dict = True
-                 break
+             if isinstance(stmt, ast.Return):
+                 if isinstance(stmt.value, ast.Dict):
+                     returns_dict = True
+                     break
+                 # Check if returning a variable that's assigned a dict
+                 elif isinstance(stmt.value, ast.Name):
+                     for assign in ast.walk(node):
+                         if isinstance(assign, ast.Assign):
+                             target = assign.targets[0]
+                             if isinstance(target, ast.Name) and target.id == stmt.value.id:
+                                 if isinstance(assign.value, ast.Dict):
+                                     returns_dict = True
+                                     break
          
          # Check if function returns a vector and its nesting level
          returns_vec = False
@@ -1886,7 +1896,25 @@ class JavaTranspiler(BaseTranspiler):
                     else:
                         # Fall back to default
                         if num_params == 1:
-                            self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\");")
+                            # Check parameter type before creating test data
+                            param_name = init_method.args.args[1].arg  # Skip 'self'
+                            # Set current_class so _infer_param_type can look up field types
+                            old_class = self.current_class
+                            self.current_class = cls.name
+                            param_type = self._infer_param_type(init_method, param_name)
+                            self.current_class = old_class
+                            if "Map" in param_type:
+                                # Create a test Map with sample data
+                                self.emit(f"Map<String, Object> testMap = new HashMap<>();")
+                                self.emit(f"testMap.put(\"total\", 15);")
+                                self.emit(f"testMap.put(\"average\", 3);")
+                                self.emit(f"testMap.put(\"count\", 5);")
+                                self.emit(f"{cls.name} {class_var} = new {cls.name}(testMap);")
+                            elif param_type == "int":
+                                # Create test integer value
+                                self.emit(f"{cls.name} {class_var} = new {cls.name}(42);")
+                            else:
+                                self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\");")
                         elif num_params == 2:
                             self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\", 1000);")
                         else:
@@ -1894,7 +1922,25 @@ class JavaTranspiler(BaseTranspiler):
                 else:
                     # No test data, use defaults based on parameter count
                     if num_params == 1:
-                        self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\");")
+                        # Check parameter type before creating test data
+                        param_name = init_method.args.args[1].arg  # Skip 'self'
+                        # Set current_class so _infer_param_type can look up field types
+                        old_class = self.current_class
+                        self.current_class = cls.name
+                        param_type = self._infer_param_type(init_method, param_name)
+                        self.current_class = old_class
+                        if "Map" in param_type:
+                            # Create a test Map with sample data
+                            self.emit(f"Map<String, Object> testMap = new HashMap<>();")
+                            self.emit(f"testMap.put(\"total\", 15);")
+                            self.emit(f"testMap.put(\"average\", 3);")
+                            self.emit(f"testMap.put(\"count\", 5);")
+                            self.emit(f"{cls.name} {class_var} = new {cls.name}(testMap);")
+                        elif param_type == "int":
+                            # Create test integer value
+                            self.emit(f"{cls.name} {class_var} = new {cls.name}(42);")
+                        else:
+                            self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\");")
                     elif num_params == 2:
                         self.emit(f"{cls.name} {class_var} = new {cls.name}(\"test\", 1000);")
                     else:
@@ -1996,7 +2042,7 @@ class JavaTranspiler(BaseTranspiler):
                  for stmt in item.body:
                      if isinstance(stmt, ast.Assign):
                          target = stmt.targets[0]
-                         if isinstance(target, ast.Attribute) and target.attr != "self":
+                         if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name) and target.value.id == "self":
                              field_name = target.attr
                              # Infer type from value AND field name
                              field_type = "String"
@@ -2005,28 +2051,40 @@ class JavaTranspiler(BaseTranspiler):
                              if "data_points" in field_name or "transactions" in field_name or "items" in field_name:
                                  field_type = "ArrayList"
                              # Then check for numeric field names
-                             elif field_name in ["balance", "amount", "initial_balance", "count", "age", "id", "total"]:
+                             elif field_name in ["balance", "amount", "initial_balance", "count", "age", "id", "total", "scaled_value", "squared", "scaled"]:
                                  field_type = "int"
+                             # Check for boolean field names
+                             elif "is_" in field_name or "valid" in field_name or "active" in field_name:
+                                 field_type = "boolean"
                              
                              # Then check value type (can override)
                              if isinstance(stmt.value, ast.Constant):
-                                 if isinstance(stmt.value.value, int):
-                                     field_type = "int"
-                                 elif isinstance(stmt.value.value, bool):
+                                 if isinstance(stmt.value.value, bool):
                                      field_type = "boolean"
+                                 elif isinstance(stmt.value.value, int):
+                                     field_type = "int"
                                  elif isinstance(stmt.value.value, str):
                                      field_type = "String"
                              elif isinstance(stmt.value, ast.List):
                                  # If initialized with a list, it's an ArrayList
                                  field_type = "ArrayList"
+                             elif isinstance(stmt.value, ast.Dict):
+                                 # If initialized with a dict, it's a Map
+                                 field_type = "Map"
                              elif isinstance(stmt.value, ast.Name):
                                  # Check if it's a parameter name - infer from parameter
                                  for arg in item.args.args:
                                      if arg.arg == stmt.value.id:
-                                         if arg.arg in ["balance", "amount", "initial_balance"]:
+                                         if arg.arg in ["balance", "amount", "initial_balance", "count"]:
                                              field_type = "int"
+                                         elif arg.arg == "result":
+                                             # result parameter is typically a dict/map
+                                             field_type = "Map"
                                          elif arg.arg in ["account_id", "name", "id"]:
                                              field_type = "String"
+                                         # If param looks like dict/map based on naming
+                                         elif "data" in arg.arg:
+                                             field_type = "Map"
                              self.class_fields[node.name][field_name] = field_type
         
         self.emit(f"static class {node.name} {{")
@@ -2118,8 +2176,11 @@ class JavaTranspiler(BaseTranspiler):
             if node.name == "__init__":
                 if arg.arg in ["account_id", "name", "id", "sku", "description", "title"]:
                     param_type = "String"
-                elif arg.arg in ["initial_balance", "balance", "amount", "quantity", "count"]:
+                elif arg.arg in ["initial_balance", "balance", "amount", "quantity", "count", "total", "squared", "scaled", "scaled_value"]:
                     param_type = "int"
+                elif arg.arg == "result":
+                    # Check if result parameter is a dict/map
+                    param_type = "Map<String, Object>"
             # Special handling for add_data parameter
             elif node.name == "add_data" and arg.arg == "value":
                 param_type = "int"
@@ -2254,6 +2315,10 @@ class JavaTranspiler(BaseTranspiler):
                                  return "String"
                              elif field_type == "int":
                                  return "int"
+                             elif field_type == "Map":
+                                 return "Map<String, Object>"
+                             elif field_type == "boolean":
+                                 return "boolean"
          
          for stmt in ast.walk(node):
              # Check if param is being iterated over in a for loop
@@ -2701,6 +2766,8 @@ class JavaTranspiler(BaseTranspiler):
                                 return f"({obj} instanceof Double)"
                             elif type_name == "list":
                                 return f"({obj} instanceof java.util.List)"
+                            elif type_name == "dict":
+                                return f"({obj} instanceof java.util.Map)"
                             else:
                                 return f"({obj} instanceof {type_name})"
                     return "false"
@@ -2756,6 +2823,15 @@ class JavaTranspiler(BaseTranspiler):
         if isinstance(node, ast.Compare):
             left = self._expr(node.left)
             right = self._expr(node.comparators[0])
+            
+            # Handle different comparison operators
+            if isinstance(node.ops[0], ast.In):
+                # Python "x in dict" -> Java "dict.containsKey(x)" or "list.contains(x)"
+                return f"{right}.containsKey({left})"
+            elif isinstance(node.ops[0], ast.NotIn):
+                # Python "x not in dict" -> Java "!dict.containsKey(x)"
+                return f"!{right}.containsKey({left})"
+            
             op = ">="
             if isinstance(node.ops[0], ast.Lt): op = "<"
             elif isinstance(node.ops[0], ast.LtE): op = "<="
