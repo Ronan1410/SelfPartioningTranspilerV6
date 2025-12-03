@@ -108,19 +108,12 @@ def main():
             run_command(f"go run {filename}")
 
         elif lang == "Java":
-            # javac filename.java && java ClassName
-            # Assuming class name is Main or filename dependent. 
-            # My PolyglotTranspiler uses 'public class Main' or similar.
-            # If multiple files have 'class Main', this will clash.
-            # For this mock, let's assume single file compilation or just printing.
+            # javac filename.java && java Main
+            # The PolyglotTranspiler generates 'public class Main' 
+            compile_cmd = f"javac {filename}"
             
-            # Note: The Mock Polyglot output for Java is 'public class Main'.
-            # We need to rename the file to Main.java to compile it properly in Java,
-            # OR we should have generated it as Main.java.
-            # But we have segment_i_Java.java.
-            # Quick hack: Rename temporarily or just try to run single-file source-code mode (Java 11+)
-            
-            run_command(f"java {filename}")
+            if run_command(compile_cmd):
+                run_command("java Main")
 
         else:
             print(f"Unknown language: {lang}")
