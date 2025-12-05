@@ -5,7 +5,7 @@
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │                  SelfPartioningTranspiler V6                      │
-│                   Complete System Architecture                     │
+│                   Complete System Architecture                    │
 └───────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐
@@ -16,9 +16,8 @@
 ┌────────────────────────────────────────────────────────┐
 │          Entry Point Selection                         │
 ├────────────────────────────────────────────────────────┤
-│  • interactive_cli.py      (Interactive Menu)         │
-│  • main_enhanced.py        (CLI with Options)          │
-│  • main.py                 (Original)                  │
+|                                                        │
+│  • main.py                                             │
 └────────┬──────────────────────────────────────┬────────┘
          │                                      │
     ┌────▼────┐                         ┌──────▼────┐
@@ -31,10 +30,10 @@
 │              Code Segmentation                         │
 ├────────────────────────────────────────────────────────┤
 │ Splits code by:                                        │
-│  • Functions (FunctionDef)                            │
-│  • Classes (ClassDef)                                 │
-│  • Async Functions (AsyncFunctionDef)                 │
-│  • Top-level statements                              │
+│  • Functions (FunctionDef)                             │
+│  • Classes (ClassDef)                                  │
+│  • Async Functions (AsyncFunctionDef)                  │
+│  • Top-level statements                                │
 └────┬──────────────────────────────────────────────────┘
      │
      ▼
@@ -94,10 +93,10 @@
 ┌────────────────────────────────────────────────────────┐
 │          Language-Specific Transpilers                 │
 ├────────────────────────────────────────────────────────┤
-│ RustTranspiler    • Type annotations, ownership       │
-│ CppTranspiler     • Headers, namespaces              │
-│ GoTranspiler      • Package structure, simplicity    │
-│ JavaTranspiler    • Classes, OOP patterns            │
+│ RustTranspiler    • Type annotations, ownership        │
+│ CppTranspiler     • Headers, namespaces                │
+│ GoTranspiler      • Package structure, simplicity      │
+│ JavaTranspiler    • Classes, OOP patterns              │
 └────┬───────────────────────────────────────────────────┘
      │
      ▼
@@ -138,10 +137,10 @@
          └──────────┬───────────────┘
                     │
                     ▼
-┌────────────────────────────────────────────────────────┐
-│         Metrics Visualization                          │
-├────────────────────────────────────────────────────────┤
-│ MetricsVisualizer generates:                           │
+┌───────────────────────────────────────────────────────┐
+│         Metrics Visualization                         │
+├───────────────────────────────────────────────────────┤
+│ MetricsVisualizer generates:                          │
 │  • Summary Cards (Speedup, Memory, Efficiency)        │
 │  • Execution Time Chart                               │
 │  • Memory Usage Chart                                 │
@@ -185,14 +184,14 @@
        │ 8. Exit           │
        └────────┬──────────┘
                 │
-     ┌──────────┼──────────────────────────────────┐
-     │          │                                  │
-     ▼          ▼                                  │
+     ┌──────────┼─────────────────────────────────┐
+     │          │                                 │
+     ▼          ▼                                 │
   ┌──────┐  ┌────────┐                            │
   │Input │  │ Load   │                            │
   │Code  │  │ File   │                            │
   └──┬───┘  └───┬────┘                            │
-     │          │                                  │
+     │          │                                 │
      │    ┌─────┴──────┐                          │
      │    │            │                          │
      │    ▼            ▼                          │
@@ -265,35 +264,35 @@
     │ (AST Visitor)      │
     └────────┬───────────┘
              │
-        ┌────┼─────────────────────────────────────┐
-        │    │                                     │
-        ▼    ▼                                     │
-    ┌──────────────┐                             │
-    │ visit_BinOp  │ → math_ops++                │
-    └──────────────┘                             │
-        ┌──────────────┐                         │
-        │ visit_Call   │ → Check if print/open   │
-        │              │    io_ops++             │
-        │              │ → else functions++      │
-        └──────────────┘                         │
-        ┌──────────────┐                         │
-        │ visit_For    │ → loops++               │
-        │ visit_While  │                         │
-        └──────────────┘                         │
-        ┌──────────────┐                         │
-        │ visit_If     │ → conditionals++        │
-        └──────────────┘                         │
-        ┌──────────────┐                         │
-        │visit_ClassDef│ → classes++             │
-        └──────────────┘                         │
-        ┌──────────────────┐                     │
-        │visit_AsyncFunc   │ → async_ops++       │
-        │visit_Await       │                     │
-        └──────────────────┘                     │
-        ┌──────────────┐                         │
-        │visit_Constant│ → if str: string_ops++  │
-        └──────────────┘                         │
-                │                                │
+        ┌────┼──────────────────────────────────┐
+        │    │                                  │
+        ▼    ▼                                  │
+    ┌──────────────┐                            │
+    │ visit_BinOp  │ → math_ops++               │
+    └──────────────┘                            │
+        ┌──────────────┐                        │
+        │ visit_Call   │ → Check if print/open  │
+        │              │    io_ops++            │
+        │              │ → else functions++     │
+        └──────────────┘                        │
+        ┌──────────────┐                        │
+        │ visit_For    │ → loops++              │
+        │ visit_While  │                        │
+        └──────────────┘                        │
+        ┌──────────────┐                        │
+        │ visit_If     │ → conditionals++       │
+        └──────────────┘                        │
+        ┌──────────────┐                        │
+        │visit_ClassDef│ → classes++            │
+        └──────────────┘                        │
+        ┌──────────────────┐                    │
+        │visit_AsyncFunc   │ → async_ops++      │
+        │visit_Await       │                    │
+        └──────────────────┘                    │
+        ┌──────────────┐                        │
+        │visit_Constant│ → if str: string_ops++ │
+        └──────────────┘                        │
+                │                               │
                 └───────────────────────────────┘
                            │
                            ▼
@@ -381,7 +380,7 @@
 │  def fibonacci(n):                 │
 │      if n <= 1:                    │
 │          return n                  │
-│      return fib(n-1) + fib(n-2)   │
+│      return fib(n-1) + fib(n-2)    │
 └────────┬───────────────────────────┘
          │
          ▼
@@ -453,8 +452,8 @@
          ▼
     ┌─────────────────────────────────┐
     │ Create temp Python file         │
-    │ Start timing (time.time())       │
-    │ Monitor memory (psutil)          │
+    │ Start timing (time.time())      │
+    │ Monitor memory (psutil)         │
     │ Execute via subprocess          │
     │ Capture stdout/stderr           │
     │ Record peak memory              │
@@ -530,7 +529,7 @@
     │DOCTYPE       │  │Grid Layout     │ │Chart.js config │
     │Meta tags     │  │Colors/Gradients│ │Event handlers  │
     └──────────────┘  └────────────────┘ └────────────────┘
-             │                 │              │
+             │                  │              │
              └──────────────────┴──────────────┘
                       │
                       ▼
@@ -660,15 +659,15 @@
     │ ✅ ANALYSIS COMPLETE             │
     │                                  │
     │ Output directory: out_dir/       │
-    │ • segment_0_Rust.rs            │
-    │ • segment_1_Cpp.cpp            │
-    │ • segment_2_Go.go              │
-    │ • segment_3_Java.java          │
-    │ • runner.py                    │
+    │ • segment_0_Rust.rs              │
+    │ • segment_1_Cpp.cpp              │
+    │ • segment_2_Go.go                │
+    │ • segment_3_Java.java            │
+    │ • runner.py                      │
     │                                  │
     │ Visualization: viz/              │
-    │ • metrics_report.html          │
-    │ • report.html                  │
+    │ • metrics_report.html            │
+    │ • report.html                    │
     └──────────────────────────────────┘
 ```
 
