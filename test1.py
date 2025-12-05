@@ -70,3 +70,21 @@ def crypto_hash_simulation():
                 hash_val -= 1
     return hash_val
 # Predicted Output: -16 (Approximate result depending on specific integer overflow handling, but deterministic)
+
+# Main execution
+if __name__ == "__main__":
+    # Test fibonacci
+    result1 = fibonacci_memoized(10)
+    print(f"Fibonacci(10) = {result1}")
+    
+    # Test async network simulator
+    asyncio.run(network_service_simulator())
+    
+    # Test inventory
+    item = InventoryItem("SKU123")
+    print(item.restock(50))
+    print(item.sell(10))
+    
+    # Test crypto hash
+    result4 = crypto_hash_simulation()
+    print(f"Crypto hash = {result4}")

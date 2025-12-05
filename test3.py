@@ -57,3 +57,21 @@ class EnterpriseCustomerManager:
 
     def validate(self):
         return isinstance(self.name, str)
+
+# Main execution
+if __name__ == "__main__":
+    # Test matrix computation
+    result1 = heavy_computation_matrix()
+    print(f"Heavy computation result: {result1}")
+    
+    # Test factorial
+    result2 = recursive_factorial_algorithm(5)
+    print(f"Factorial(5) = {result2}")
+    
+    # Test async log processor
+    asyncio.run(concurrent_log_processor())
+    
+    # Test customer manager
+    customer = EnterpriseCustomerManager("John Doe")
+    print(customer.get_customer_details())
+    print(customer.update_status("Inactive"))

@@ -66,3 +66,21 @@ class BankAccount:
 # Predicted Output:
 # Deposit: 500 New Balance: 1500
 # Withdraw: 200 Remaining: 1300
+
+# Main execution
+if __name__ == "__main__":
+    # Test Collatz sequence
+    result1 = collatz_sequence_sum()
+    print(f"Collatz sequence sum: {result1}")
+    
+    # Test recursive power
+    result2 = recursive_power(2, 10)
+    print(f"2^10 = {result2}")
+    
+    # Test async log processor
+    asyncio.run(log_processor_pipeline())
+    
+    # Test bank account
+    account = BankAccount("ACC001")
+    print(account.deposit(500))
+    print(account.withdraw(200))
