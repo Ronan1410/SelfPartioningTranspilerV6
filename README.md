@@ -350,7 +350,7 @@ Each language has its own transpiler class inheriting from `BaseTranspiler`:
 ### Quick Start
 ```bash
 # Transpile a test file
-python main.py test_polyglot_2.py
+python main.py your_file.py
 
 # Run the generated code
 python out_dir/runner.py
@@ -376,23 +376,6 @@ python out_dir/runner.py
 open viz/report.html
 ```
 
-## Testing
-
-```bash
-# Run comprehensive test suite
-python debug_files/run_comprehensive_tests.py
-
-# Validate all fixes
-python validate_all.py
-
-# Inspect specific generation
-python inspect_generation.py
-
-# Test Go transpilation only
-python manual_go_test.py
-```
-
-See `TESTING_GUIDE.md` for detailed testing documentation.
 
 ## Recent Fixes
 
@@ -402,7 +385,6 @@ See `TESTING_GUIDE.md` for detailed testing documentation.
 - Suppress unused variables with blank identifier `_`
 - Selective import generation (only import used packages)
 
-See [FIX_SUMMARY.md](FIX_SUMMARY.md) and [FIXES_APPLIED.md](FIXES_APPLIED.md) for technical details.
 
 ## Architecture Overview
 
